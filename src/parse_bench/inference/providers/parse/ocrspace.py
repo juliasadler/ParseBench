@@ -66,10 +66,7 @@ _SUPPORTED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp
 
 def _is_rate_limit_message(message: str) -> bool:
     lowered = message.lower()
-    return any(
-        kw in lowered
-        for kw in ("rate limit", "too many requests", "quota exceeded", "limit exceeded")
-    )
+    return any(kw in lowered for kw in ("rate limit", "too many requests", "quota exceeded", "limit exceeded"))
 
 
 @register_provider("ocrspace")
@@ -78,18 +75,12 @@ class OCRSpaceProvider(Provider):
 
     def __init__(self, provider_name: str, base_config: dict[str, Any] | None = None):
         super().__init__(provider_name, base_config)
-        self._api_key = (
-            self.base_config.get("api_key") or os.environ.get("OCRSPACE_API_KEY") or _DEMO_API_KEY
-        )
-        self._base_url = self.base_config.get("base_url") or os.environ.get(
-            "OCRSPACE_BASE_URL", _DEFAULT_BASE_URL
-        )
+        self._api_key = self.base_config.get("api_key") or os.environ.get("OCRSPACE_API_KEY") or _DEMO_API_KEY
+        self._base_url = self.base_config.get("base_url") or os.environ.get("OCRSPACE_BASE_URL", _DEFAULT_BASE_URL)
         self._language = self.base_config.get("language", "eng")
         self._ocr_engine = int(self.base_config.get("ocr_engine", 2))
         if self._ocr_engine not in _SUPPORTED_ENGINES:
-            raise ProviderConfigError(
-                f"Invalid ocr_engine '{self._ocr_engine}'. Must be one of {_SUPPORTED_ENGINES}."
-            )
+            raise ProviderConfigError(f"Invalid ocr_engine '{self._ocr_engine}'. Must be one of {_SUPPORTED_ENGINES}.")
         self._scale = bool(self.base_config.get("scale", False))
         self._is_table = bool(self.base_config.get("is_table", False))
         self._detect_orientation = bool(self.base_config.get("detect_orientation", False))
@@ -132,13 +123,9 @@ class OCRSpaceProvider(Provider):
         if response.status_code == 429:
             raise ProviderRateLimitError(f"OCR.space rate limited (HTTP 429): {response.text[:200]}")
         if 500 <= response.status_code < 600:
-            raise ProviderTransientError(
-                f"OCR.space server error (HTTP {response.status_code}): {response.text[:200]}"
-            )
+            raise ProviderTransientError(f"OCR.space server error (HTTP {response.status_code}): {response.text[:200]}")
         if response.status_code != 200:
-            raise ProviderPermanentError(
-                f"OCR.space returned HTTP {response.status_code}: {response.text[:200]}"
-            )
+            raise ProviderPermanentError(f"OCR.space returned HTTP {response.status_code}: {response.text[:200]}")
         try:
             payload = response.json()
         except Exception as e:
